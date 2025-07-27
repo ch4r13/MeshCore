@@ -8,6 +8,9 @@ void SerialBLEInterface::onConnect(uint16_t connection_handle) {
     instance->_isDeviceConnected = true;
     // no need to stop advertising on connect, as the ble stack does this automatically
   }
+  digitalWrite(LED_BLUE, LED_STATE_ON); // Bluetooth connect emits LED_BLUE for a while to notify user about successfull BLE connection
+  delay(1800);
+  digitalWrite(LED_BLUE, (LED_STATE_ON == HIGH) ? LOW : HIGH); // It should be turn OFF and also take into account LED_STATE_ON
 }
 
 void SerialBLEInterface::onDisconnect(uint16_t connection_handle, uint8_t reason) {
@@ -29,6 +32,7 @@ void SerialBLEInterface::begin(const char* device_name, uint32_t pin_code) {
   Bluefruit.configPrphConn(250, BLE_GAP_EVENT_LENGTH_MIN, 16, 16);  // increase MTU
   Bluefruit.begin();
   Bluefruit.setTxPower(4);    // Check bluefruit.h for supported values
+  Bluefruit.autoConnLed(false); // Disable the LED blue light during active connection for all devices
   Bluefruit.setName(device_name);
 
   Bluefruit.Security.setMITM(true);

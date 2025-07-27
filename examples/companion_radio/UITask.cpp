@@ -257,6 +257,13 @@ void UITask::userLedHandler() {
   static int last_increment = 0;
 
   int cur_time = millis();
+  //// This logics should fix reversed behavior on device T-echo "0 = LED will light"
+  /// This function take in account defined LED_STATE_ON value which should be LOW/HIGH
+  if (_msgcount == 0) {
+    digitalWrite(PIN_STATUS_LED, (LED_STATE_ON == HIGH) ? LOW : HIGH);
+    state = 0;
+    return;
+  }
   if (cur_time > next_change) {
     if (state == 0) {
       state = 1;
