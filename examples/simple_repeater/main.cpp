@@ -98,6 +98,7 @@ struct RepeaterStats {
   uint16_t err_events;                // was 'n_full_events'
   int16_t  last_snr;   // x 4
   uint16_t n_direct_dups, n_flood_dups;
+  uint32_t total_rx_air_time_secs;
 };
 
 struct ClientInfo {
@@ -208,6 +209,7 @@ class MyMesh : public mesh::Mesh, public CommonCLICallbacks {
         stats.last_snr = (int16_t)(radio_driver.getLastSNR() * 4);
         stats.n_direct_dups = ((SimpleMeshTables *)getTables())->getNumDirectDups();
         stats.n_flood_dups = ((SimpleMeshTables *)getTables())->getNumFloodDups();
+        stats.total_rx_air_time_secs = getReceiveAirTime() / 1000;
 
         memcpy(&reply_data[4], &stats, sizeof(stats));
 
@@ -717,7 +719,7 @@ public:
     *dp = 0;  // null terminator
   }
 
-  const uint8_t* getSelfIdPubKey() override { return self_id.pub_key; }
+  mesh::LocalIdentity& getSelfId() override { return self_id; }
 
   void clearStats() override {
     radio_driver.resetStats();
@@ -780,7 +782,7 @@ void halt() {
   while (1) ;
 }
 
-static char command[80];
+static char command[160];
 
 void setup() {
   Serial.begin(115200);

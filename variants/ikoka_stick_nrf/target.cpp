@@ -1,31 +1,25 @@
-#include "target.h"
-
 #include <Arduino.h>
+#include "target.h"
 #include <helpers/ArduinoHelpers.h>
 
-WaveshareBoard board;
+ikoka_stick_nrf_board board;
 
-RADIO_CLASS radio = new Module(P_LORA_NSS, P_LORA_DIO_1, P_LORA_RESET, P_LORA_BUSY, SPI1);
+#ifdef DISPLAY_CLASS
+  DISPLAY_CLASS display;
+#endif
+
+RADIO_CLASS radio = new Module(P_LORA_NSS, P_LORA_DIO_1, P_LORA_RESET, P_LORA_BUSY, SPI);
+
 WRAPPER_CLASS radio_driver(radio, board);
 
 VolatileRTCClock fallback_clock;
 AutoDiscoverRTCClock rtc_clock(fallback_clock);
-SensorManager sensors;
+EnvironmentSensorManager sensors;
 
 bool radio_init() {
-  rtc_clock.begin(Wire);
-
-  SPI1.setSCK(P_LORA_SCLK);
-  SPI1.setTX(P_LORA_MOSI);
-  SPI1.setRX(P_LORA_MISO);
-
-  pinMode(P_LORA_NSS, OUTPUT);
-  digitalWrite(P_LORA_NSS, HIGH);
-
-  SPI1.begin(false);
-
-  //passing NULL skips init of SPI
-  return radio.std_init(NULL);
+    rtc_clock.begin(Wire);
+  
+    return radio.std_init(&SPI);
 }
 
 uint32_t radio_get_rng_seed() {
@@ -45,5 +39,5 @@ void radio_set_tx_power(uint8_t dbm) {
 
 mesh::LocalIdentity radio_new_identity() {
   RadioNoiseListener rng(radio);
-  return mesh::LocalIdentity(&rng); // create new random identity
+  return mesh::LocalIdentity(&rng);  // create new random identity
 }

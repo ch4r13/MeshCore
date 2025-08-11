@@ -1,7 +1,5 @@
 #include <Arduino.h>
-#include "nano-g2.h"
-
-#ifdef NANO_G2_ULTRA
+#include "MeshSolarBoard.h"
 
 #include <bluefruit.h>
 #include <Wire.h>
@@ -22,44 +20,20 @@ static void disconnect_callback(uint16_t conn_handle, uint8_t reason)
   MESH_DEBUG_PRINTLN("BLE client disconnected");
 }
 
-void NanoG2Ultra::begin()
-{
+void MeshSolarBoard::begin() {
   // for future use, sub-classes SHOULD call this from their begin()
   startup_reason = BD_STARTUP_NORMAL;
 
-  // set user button
-  pinMode(PIN_BUTTON1, INPUT);
+  meshSolarStart();
 
-  // the external notification circuit is shared for both buzzer and led
-  pinMode(EXT_NOTIFY_OUT, OUTPUT);
-  digitalWrite(EXT_NOTIFY_OUT, LOW);
+#if defined(PIN_BOARD_SDA) && defined(PIN_BOARD_SCL)
+  Wire.setPins(PIN_BOARD_SDA, PIN_BOARD_SCL);
+#endif
 
-  pinMode(GPS_EN, OUTPUT); // Initialize GPS power pin
-  
   Wire.begin();
-  pinMode(SX126X_POWER_EN, OUTPUT);
-  digitalWrite(SX126X_POWER_EN, HIGH);
-
-  delay(10);
 }
 
-uint16_t NanoG2Ultra::getBattMilliVolts()
-{
-  int adcvalue = 0;
-
-  analogReference(AR_INTERNAL_3_0);
-  analogReadResolution(12);
-  delay(10);
-
-  // ADC range is 0..3000mV and resolution is 12-bit (0..4095)
-  adcvalue = analogRead(PIN_VBAT_READ);
-  // Convert the raw value to compensated mv, taking the resistor-
-  // divider into account (providing the actual LIPO voltage)
-  return (uint16_t)((float)adcvalue * REAL_VBAT_MV_PER_LSB);
-}
-
-bool NanoG2Ultra::startOTAUpdate(const char *id, char reply[])
-{
+bool MeshSolarBoard::startOTAUpdate(const char* id, char reply[]) {
   // Config the peripheral connection with maximum bandwidth
   // more SRAM required by SoftDevice
   // Note: All config***() function must be called before begin()
@@ -70,7 +44,7 @@ bool NanoG2Ultra::startOTAUpdate(const char *id, char reply[])
   // Set max power. Accepted values are: -40, -30, -20, -16, -12, -8, -4, 0, 4
   Bluefruit.setTxPower(4);
   // Set the BLE device name
-  Bluefruit.setName("NANO_G2_OTA");
+  Bluefruit.setName("MESH_SOLAR_OTA");
 
   Bluefruit.Periph.setConnectCallback(connect_callback);
   Bluefruit.Periph.setDisconnectCallback(disconnect_callback);
@@ -101,4 +75,3 @@ bool NanoG2Ultra::startOTAUpdate(const char *id, char reply[])
   strcpy(reply, "OK - started");
   return true;
 }
-#endif
